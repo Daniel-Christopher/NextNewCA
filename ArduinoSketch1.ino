@@ -22,29 +22,59 @@ HARDWARE:
 #include "LPD8806.h"
 #include "SPI.h"
 
+//data structure for storing rgb values
+struct RGB {
+  byte r;
+  byte g;
+  byte b;
+};
+
+//RGB data structure reused for pin assignments in stripSet
+//because making a seperate struct would be redundant
+struct stripSet {
+  RGB one;
+  RGB two;
+  RGB three;
+  RGB four;
+};
+//example stripSet access: ledStrips.one.r = 255;
+
 // Number of RGB LEDs in DALED strand:
-#define nLEDs = 154
+const nLEDs = 154;
 
 //2 pins for DALED output
-#define DATAPIN = 2
-#define CLOCKPIN = 3
+const byte DATAPIN = 2;
+const byte CLOCKPIN = 3;
 
 // DALED Initializer: first param is the number of LEDs in the strand. Next two are SPI data and clock pins:
 LPD8806 strip = LPD8806(nLEDs, dataPin, clockPin);
 
-//LED channels
-#define R1 0
-#define G1 1
-#define B1 2
-#define R2 3
-#define G2 4
-#define B2 5
-#define R3 6
-#define G3 7
-#define B3 8
-#define R4 9
-#define G4 10
-#define B4 11
+//LED pins for each strip
+const RGB stripOne =  {0,1,2};
+const RGB stripTwo =  {3,4,5};
+const RGB stripThree =  {6,7,8};
+const RGB stripFour = {9,10,11};
+//remember these const values are unchangeable by the program,
+//and are used only to store pin assignments.
+
+//stripSet of all LED strips
+//again const
+const stripSet ledStrips {stripOne, stripTwo, stripThree, stripFour};
+
+//writes all colors to their corresponding strips
+//example usage: writeStrips(stripSet, red, purple, orange, yellow);
+void writeStrips( stripSet strips, RGB first, RGB second, RGB third, RGB fourth){
+  writeStrip(strips.one, first);
+  writeStrip(strips.two, second);
+  writeStrip(strips.three, third);
+  writeStrip(strips.four, fourth);
+}
+//helper function for writeStrips
+void writeStrip(RGB strip, RGB color){
+  analogWrite(strip.r, color.r);
+  analogWrite(strip.g, color.g);
+  analogWrite(strip.b, color.b);
+}
 
 //Number of times Final PIR activated
 int i;
@@ -59,8 +89,8 @@ int PIRcount[4];
 //AIDAN Q: Will these longs take up too much memory? FYI: in main loop, Arduino resets program everyday
 
 //Timing, used by readPIR()
-long startTime, startTimeforOveride, timeSinceLastOverride;
-long lastSense[4] ={0, 0, 0, 0};
+uint startTime, startTimeforOveride, timeSinceLastOverride;
+uint lastSense[4] ={0, 0, 0, 0};
 bool coolingDown[4] = {false, false, false, false};
 bool everOveridden;
 
@@ -76,20 +106,12 @@ void setup(){
   //Warm up for PIRs
   delay(7000);
 
-  pinMode(R1, OUTPUT);
-  pinMode(G1, OUTPUT);
-  pinMode(B1, OUTPUT);
-  pinMode(R2, OUTPUT);
-  pinMode(G2, OUTPUT);
-  pinMode(B2, OUTPUT);
-  pinMode(R3, OUTPUT);
-  pinMode(G3, OUTPUT);
-  pinMode(B3, OUTPUT);
-  pinMode(G4, OUTPUT);
-  pinMode(R4, OUTPUT);
-  pinMode(B4, OUTPUT);
+  //kinda hacky due to using constants, but way more concise way of initializing
+  for (int i = 0; i<12; i++){
+    pinMode(i, OUTPUT);
+  }
 
-   // Start up the DALED strip
+  // Start up the DALED strip
   strip.begin();
 
   // Update the DALED strip, to start they are all 'off'
@@ -100,11 +122,13 @@ void setup(){
 
 /**********************/
 
-
+uint seconds(){
+  return (uint) millis()/1000;
+}
 
 void loop(){
-  //Reset program every day
-  if (millis() > 86400000){
+  //Reset program when uint from seconds overflows
+  if (seconds() == 0){
      /* Code Snippet from "user HULK" */
     void(* resetFunc) (void) = 0; //declare reset function @ address 0
     resetFunc();
@@ -140,7 +164,7 @@ void readPIRS(){
   for (j=0; j<4; j++){
     if (PIR[j] == HIGH && !(coolingDown[j])){
       PIRcount[j]++;
-      lastSense[j] = millis();
+      lastSense[j] = startTime;
       coolingDown[j] = true;
 
         //if 4th PIR is HIGH, execute overideLED function
@@ -150,9 +174,9 @@ void readPIRS(){
         }
     }else if (PIR[j] == HIGH && coolingDown[j]){
       //if PIR is HIGH and has been at least 30 seconds since last trigger, then increment counter
-      if (startTime - lastSense[i] > 30000){
+      if (startTime - lastSense[i] > 30){
          PIRcount[j]++;
-         lastSense[j] = millis();
+         lastSense[j] = startTime;
          coolingDown[j] = true;
       }else{
         //Not Enough time has Elapsed
@@ -160,10 +184,10 @@ void readPIRS(){
 
     }else if (PIR[j] == LOW){
        //if PIR is HIGH and has been at least 60 seconds since last trigger, then decrement counter
-      if (startTime - lastSense[j] > 60000){
+      if (startTime - lastSense[j] > 60){
         if (PIRcount[j] > 0){
           PIRcount[j]--;
-          lastSense[j] = millis();
+          lastSense[j] = startTime;
         }
       }
     }
@@ -199,18 +223,18 @@ int processPIRs(){
 void overideLEDs(){
 
   //Only allow one time per 2 minutes
-  startTimeforOveride = millis();
+  startTimeforOveride = seconds();
 
   //Execute first time
   if (!everOveridden){
       // Blinky code here
       everOveridden = true;
-      timeSinceLastOverride = millis();
+      timeSinceLastOverride = startTimeforOveride;
 
   //Executes only if more than two minutes has elapsed since last call
-  }else if (everOveridden && (startTimeforOveride - timeSinceLastOverride) > 120000){
+  }else if (everOveridden && (startTimeforOveride - timeSinceLastOverride) > 120){
       // Blinky code here
-      timeSinceLastOverride = millis();
+      timeSinceLastOverride = startTimeForOveride;
 
   }else{
       return;
@@ -236,11 +260,6 @@ void activateLEDs(){
 
 
 void LEDhelper(){
-
-
-
-
-
   //Runs DALED function above exit door frame. I'm thinking this will happen when case == 0 from function above
   //Params: RGB color & speed in millis
   colorChase(strip.Color(127, 0, 127), 25); // Violet, 25 milliseconds
