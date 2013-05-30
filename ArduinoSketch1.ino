@@ -56,14 +56,11 @@ int PIR[4];
 int PIRcount[4];
 
 
-//AIDAN Q: Will these longs take up too much memory? FYI: in main loop, Arduino resets program everyday
-
 //Timing, used by readPIR()
-long startTime, startTimeforOveride, timeSinceLastOverride;
-long lastSense[4] ={0, 0, 0, 0};
+unsigned int startTime, startTimeforOveride, timeSinceLastOverride;
+unsigned int lastSense[4] ={0, 0, 0, 0};
 bool coolingDown[4] = {false, false, false, false};
 bool everOveridden;
-
 
 
 /**********************/
@@ -104,7 +101,7 @@ void setup(){
 
 void loop(){
   //Reset program every day
-  if (millis() > 86400000){
+  if (millis() > 86400){
      /* Code Snippet from "user HULK" */
     void(* resetFunc) (void) = 0; //declare reset function @ address 0
     resetFunc();
@@ -135,12 +132,12 @@ void readPIRS(){
   PIR[2] = digitalRead(52);
   PIR[3] = digitalRead(53);
   
-  startTime = millis();
+  startTime = seconds();
 
   for (j=0; j<4; j++){
     if (PIR[j] == HIGH && !(coolingDown[j])){
       PIRcount[j]++;
-      lastSense[j] = millis();
+      lastSense[j] = seconds();
       coolingDown[j] = true;
 
         //if 4th PIR is HIGH, execute overideLED function
@@ -150,9 +147,9 @@ void readPIRS(){
         }
     }else if (PIR[j] == HIGH && coolingDown[j]){
       //if PIR is HIGH and has been at least 30 seconds since last trigger, then increment counter
-      if (startTime - lastSense[i] > 30000){
+      if (startTime - lastSense[i] > 30){
          PIRcount[j]++;
-         lastSense[j] = millis();
+         lastSense[j] = seconds();
          coolingDown[j] = true;
       }else{
         //Not Enough time has Elapsed
@@ -160,10 +157,10 @@ void readPIRS(){
 
     }else if (PIR[j] == LOW){
        //if PIR is HIGH and has been at least 60 seconds since last trigger, then decrement counter
-      if (startTime - lastSense[j] > 60000){
+      if (startTime - lastSense[j] > 60){
         if (PIRcount[j] > 0){
           PIRcount[j]--;
-          lastSense[j] = millis();
+          lastSense[j] = seconds();
         }
       }
     }
@@ -199,22 +196,28 @@ int processPIRs(){
 void overideLEDs(){
 
   //Only allow one time per 2 minutes
-  startTimeforOveride = millis();
+  startTimeforOveride = seconds();
 
   //Execute first time
   if (!everOveridden){
       // Blinky code here
       everOveridden = true;
-      timeSinceLastOverride = millis();
+      timeSinceLastOverride = seconds();
 
   //Executes only if more than two minutes has elapsed since last call
   }else if (everOveridden && (startTimeforOveride - timeSinceLastOverride) > 120000){
       // Blinky code here
-      timeSinceLastOverride = millis();
+      timeSinceLastOverride = seconds();
 
   }else{
       return;
   }
+}
+
+
+int seconds(){
+    int sec = millis()/1000;
+    return sec;
 }
 
 
