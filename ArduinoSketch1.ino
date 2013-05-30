@@ -3,24 +3,31 @@
 6/2013
 Authors: Daniel Christopher (daniel.adam.christopher@gmail.com) & Aidan Seine (aidanseine@gmail.com)
 
-This sketch modifies a ColorChasing function from Adafruit's LPD8806 example code, and
+This sketch modifies a ColorChasing function from Adafruit's LPD8806 example code
 uses parts of Color Library for Project Socialites written by Ace Levenberg (acelevenberg@gmail.com) & Aidan Seine
-
-
 
 /*** INSTALLATION SPECS ****//*
 
 HARDWARE:
 - 4 PIRS connected in parallel, being read by digital pins 50-53 (see function readPIRs)
-- 4 RGB LED strips in parallel, [0-2] is Strip1, [3-5] is Strip2, [6-8] is Strip3, [9-11] is Strip4
+- 4 RGB LED strips in parallel, [2-4] is Strip1, [5-7] is Strip2, [8-10] is Strip3, [11-13] is Strip4
 - 1 continuous strip of digital addressable RGB LEDs (DALED), 154 in total, installed above exit door
 
 *//**********************/
 
-
 /* Libraries for DALEDs */
 #include "LPD8806.h"
 #include "SPI.h"
+
+// Number of RGB LEDs in DALED strand:
+#define nLEDs = 154;
+
+//2 pins for DALED output
+#define byte DATAPIN = 2;
+#define byte CLOCKPIN = 3;
+
+// DALED Initializer: first param is the number of LEDs in the strand. Next two are SPI data and clock pins:
+LPD8806 strip = LPD8806(nLEDs, dataPin, clockPin);
 
 //data structure for storing rgb values
 struct RGB {
@@ -30,51 +37,22 @@ struct RGB {
 };
 
 //RGB data structure reused for pin assignments in stripSet
-//because making a seperate struct would be redundant
+//example stripSet access: ledStrips.one.r = 255;
 struct stripSet {
   RGB one;
   RGB two;
   RGB three;
   RGB four;
 };
-//example stripSet access: ledStrips.one.r = 255;
-
-// Number of RGB LEDs in DALED strand:
-const nLEDs = 154;
-
-//2 pins for DALED output
-const byte DATAPIN = 2;
-const byte CLOCKPIN = 3;
-
-// DALED Initializer: first param is the number of LEDs in the strand. Next two are SPI data and clock pins:
-LPD8806 strip = LPD8806(nLEDs, dataPin, clockPin);
 
 //LED pins for each strip
-const RGB stripOne =  {0,1,2};
-const RGB stripTwo =  {3,4,5};
-const RGB stripThree =  {6,7,8};
-const RGB stripFour = {9,10,11};
-//remember these const values are unchangeable by the program,
-//and are used only to store pin assignments.
+const RGB stripOne = {2,3,4};
+const RGB stripTwo = {5,6,7};
+const RGB stripThree = {8,9,10};
+const RGB stripFour = {11,12,13};
 
 //stripSet of all LED strips
-//again const
 const stripSet ledStrips {stripOne, stripTwo, stripThree, stripFour};
-
-//writes all colors to their corresponding strips
-//example usage: writeStrips(stripSet, red, purple, orange, yellow);
-void writeStrips( stripSet strips, RGB first, RGB second, RGB third, RGB fourth){
-  writeStrip(strips.one, first);
-  writeStrip(strips.two, second);
-  writeStrip(strips.three, third);
-  writeStrip(strips.four, fourth);
-}
-//helper function for writeStrips
-void writeStrip(RGB strip, RGB color){
-  analogWrite(strip.r, color.r);
-  analogWrite(strip.g, color.g);
-  analogWrite(strip.b, color.b);
-}
 
 //Number of times Final PIR activated
 int i;
@@ -85,17 +63,18 @@ int PIR[4];
 //Counters
 int PIRcount[4];
 
-
 //Timing, used by readPIR()
-uint startTime, startTimeforOveride, timeSinceLastOverride;
-uint lastSense[4] ={0, 0, 0, 0};
+uint16_t startTime, startTimeforOveride, timeSinceLastOverride;
+uint16_t lastSense[4] ={0, 0, 0, 0};
+
+//whether or not PIR is in 30second cool down period
 bool coolingDown[4] = {false, false, false, false};
+//keeps track of whether value of PIRcount is rising (true) or falling (false)
+bool rising[4] = {false, false, false, false};
 bool everOveridden;
 
 
 /**********************/
-
-
 
 void setup(){
   Serial.begin(9600);
@@ -103,8 +82,8 @@ void setup(){
   //Warm up for PIRs
   delay(7000);
 
-  //kinda hacky due to using constants, but way more concise way of initializing
-  for (int i = 0; i<12; i++){
+  //concise way of initializing
+  for (int i = 3; i<14; i++){
     pinMode(i, OUTPUT);
   }
 
@@ -116,16 +95,9 @@ void setup(){
 }
 
 
-
 /**********************/
 
-uint seconds(){
-  return (uint) millis()/1000;
-}
-
 void loop(){
-  //Reset program every day
-  if (millis() > 86400){
   //Reset program when uint from seconds overflows
   if (seconds() == 0){
      /* Code Snippet from "user HULK" */
@@ -144,9 +116,12 @@ void loop(){
 }
 
 
-
 /**********************/
 
+//convert millis to seconds
+uint16_t seconds(){
+  return millis()/1000;
+}
 
 
 //Read PIRS and keep track of which PIRs are active & generally how long they have been active
@@ -196,11 +171,10 @@ void readPIRS(){
 
 //Still in Progress...
 int processPIRs(){
-
+  
   //None active
   if (PIRcount[0] == 0 && PIRcount[1] == 0 && PIRcount[2] == 0 && PIRcount[3] == 0){
       return 0;
-
   //First PIR active only
   }else if (PIRcount[0] > 0 && PIRcount[1] < 1 && PIRcount[2] < 1 && PIRcount[3] < 1){
       return 1;
@@ -213,8 +187,32 @@ int processPIRs(){
   }else if (PIRcount[0] < 0 && PIRcount[1] > 0 || PIRcount[2] > 0 || PIRcount[3] > 0){
       return 3;
   }
+
+  //will add more cases here
 }
 
+
+//NEED HELP WITH THIS FUNCTION AND ONE BELOW
+void activateLEDs(){
+  switch (processPIRs()){
+        case '0': return;
+
+        case '1':
+            //Params: RGB color & speed in millis
+            daledAnimation(strip.Color(127, 0, 127), 25); // Violet, 25 milliseconds
+
+        case '2'
+            //RGB value for arguments of color
+            daledFade(strip.Color(), 25);
+
+        case '3'
+            //RGB value for arguments of color
+            daledFade(strip.Color(), 25);
+
+        default: break;
+    }
+  }
+}
 
 
 //Do something crazy that affects all LEDs when person walks through exit door
@@ -240,49 +238,45 @@ void overideLEDs(){
 }
 
 
-int seconds(){
-    int sec = millis()/1000;
-    return sec;
+//writes all colors to their corresponding strips
+//example usage: writeStrips(stripSet, red, purple, orange, yellow);
+void writeStrips(stripSet strips, RGB first, RGB second, RGB third, RGB fourth){
+  writeStrip(strips.one, first);
+  writeStrip(strips.two, second);
+  writeStrip(strips.three, third);
+  writeStrip(strips.four, fourth);
+}
+
+
+//helper function for writeStrips
+void writeStrip(RGB strip, RGB color){
+  analogWrite(strip.r, color.r);
+  analogWrite(strip.g, color.g);
+  analogWrite(strip.b, color.b);
+}
+
+
+//Not sure where these should go but we'll need them to define colors and for pulsing effect
+//Colors...
+ r = 255; g = 255; b = 255;//white
+ r = 255; g = 0; b = 0;//red
+ r = 255; g = 50; b = 0;//yellow
+ r = 0; g = 255; b = 0 ;//green
+ r = 0; g = 230; b = 255;//cyan
+ r = 0; g = 0; b = 255; ;//blue
+ r = 255; g = 20; b = 147; ;//violet
+
+//pulsing loops
+  for (int fadeValue = 245; fadeValue >= 0 ; fadeValue -= 5){
+    delay(rate);
+ }
+
+for (int fadeValue = 0; fadeValue <= 245; fadeValue += 5){
+  delay(rate);
 }
 
 
 
-//NEED HELP WITH THIS FUNCTION AND ONE BELOW
-void activateLEDs(){
-  switch (processPIRs()){
-        case '0': return;
-        case '1':
-              LEDhelper();
-
-        case '2'
-
-        case '3'
-        default: break;
-    }
-  }
-}
-
-
-void LEDhelper(){
-  //Runs DALED function above exit door frame. I'm thinking this will happen when case == 0 from function above
-  //Params: RGB color & speed in millis
-  colorChase(strip.Color(127, 0, 127), 25); // Violet, 25 milliseconds
-}
-
-
-
-//Still unclear what to send PI
-void writePi(){
-  Serial.println("PIR Activity: ");
-
-  //Ideally we'll tell the Pi when to take a photo here
-  Serial.print("EXIT DOOR: ");
-    if (PIRcount[3] > 0){
-      Serial.println("ACTIVE");
-    }else{
-      Serial.println("INACTIVE");
-    }
-}
 
 
 
@@ -303,9 +297,10 @@ void writePi(){
 /* 0                   153 */
 
 
-void colorChase(uint32_t c, uint8_t wait) {
+void daledAnimation(uint32_t c, uint8_t wait) {
   int a, b;
 
+  //1st - color chase animation
   // Start by turning all pixels off:
   for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
 
@@ -335,4 +330,44 @@ void colorChase(uint32_t c, uint8_t wait) {
      delay(wait);
   }
   strip.show(); // Refresh to turn off last pixel
+
+  //2nd - color chase animation
+  //colorWipe animation
+  for (a=77, b=78; a>0; a--, b++) {
+      strip.setPixelColor(a, c);
+      strip.setPixelColor(b, c);
+      strip.show();
+      delay(wait*2);
+  }
+
+  for(a=0, b=153; a>78; a++, b--) {
+      strip.setPixelColor(a, c);
+      strip.setPixelColor(b, c);
+      strip.show();
+      delay(wait*2);
+  }
+
+  //turn off
+  for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
+  strip.show(); // Refresh to turn off last pixel
 }
+
+void daledFade(uint32_t c, uint8_t wait) {
+ /////
+}
+
+
+//Still unclear what to send PI
+void writePi(){
+  Serial.println("PIR Activity: ");
+
+  //Ideally we'll tell the Pi when to take a photo here
+  Serial.print("EXIT DOOR: ");
+    if (PIRcount[3] > 0){
+      Serial.println("ACTIVE");
+    }else{
+      Serial.println("INACTIVE");
+    }
+}
+
+
