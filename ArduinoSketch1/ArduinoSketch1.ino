@@ -15,21 +15,10 @@ HARDWARE:
 
 *//**********************/
 
-/* Libraries for DALEDs */
-#include "LPD8806.h"
+
 #include "SPI.h"
 #include "RGBstrips.h"
 
-
-// Number of RGB LEDs in DALED strand:
-const int nLEDs = 154;
-
-//2 pins for DALED output
-const byte DATAPIN = 2;
-const byte CLOCKPIN = 3;
-
-// DALED Initializer: first param is the number of LEDs in the strand. Next two are SPI data and clock pins:
-LPD8806 strip = LPD8806(nLEDs, DATAPIN, CLOCKPIN);
 
 //LED pins for each strip
 const RGB stripOne = {2,3,4};
@@ -69,15 +58,13 @@ void setup(){
   delay(7000);
 
   //concise way of initializing
-  for (int i = 3; i<14; i++){
-    pinMode(i, OUTPUT);
+  for (int j = 3; j<14; j++){
+    pinMode(j, OUTPUT);
   }
 
-  // Start up the DALED strip
-  strip.begin();
-
-  // Update the DALED strip, to start they are all 'off'
-  strip.show();
+  for (int j = 25; j<28; j++){
+  pinMode(j, OUTPUT);
+  }
 }
 
 
@@ -155,28 +142,6 @@ void readPIRS(){
   }
 }
 
-
-//Still in Progress...
-int processPIRs(){
-  
-  //None active
-  if (PIRcount[0] == 0 && PIRcount[1] == 0 && PIRcount[2] == 0 && PIRcount[3] == 0){
-      return 0;
-  //First PIR active only
-  }else if (PIRcount[0] > 0 && PIRcount[1] < 1 && PIRcount[2] < 1 && PIRcount[3] < 1){
-      return 1;
-
-  //Two or More PIRs active, (includes first PIR)
-  }else if (PIRcount[0] > 0 && PIRcount[1] > 0 || PIRcount[2] > 0 || PIRcount[3] > 0){
-      return 2;
-
-  //First PIR Inactive, one other PIR active
-  }else if (PIRcount[0] < 0 && PIRcount[1] > 0 || PIRcount[2] > 0 || PIRcount[3] > 0){
-      return 3;
-  }
-
-  //will add more cases here
-}
 
 void writeStrips(stripSet strips, RGB first, RGB second, RGB third, RGB fourth){
   writeStrip(strips.one, first);
@@ -259,27 +224,6 @@ void letsGoCrazy(stripSet strips){
   }
 }
 
-//NEED HELP WITH THIS FUNCTION AND ONE BELOW
-void activateLEDs(){
-  switch (processPIRs()){
-        case '0': return;
-            //Params: RGB color & speed in millis
-            daledAnimation(strip.Color(127, 0, 127), 25); // Violet, 25 milliseconds
-        case '1':
-            
-
-        case '2':
-            //RGB value for arguments of color
-            daledFade(strip.Color(127, 0, 127), 25);
-
-        case '3':
-            //RGB value for arguments of color
-            daledFade(strip.Color(127, 0, 127), 25);
-
-        default: break;
-    }
-}
-
 
 //Do something crazy that affects all LEDs when person walks through exit door
 // Approx 5-10 second light effect
@@ -290,96 +234,22 @@ void overideLEDs(){
 
   //Execute first time
   if (!everOveridden){
-      // Blinky code here
-      //letsGoCrazy(ledStrips);
+
+      digitalWrite(25, HIGH);
+      letsGoCrazy(ledStrips);
       everOveridden = true;
       timeSinceLastOverride = seconds();
+      digitalWrite(25, LOW);
 
   //Executes only if more than two minutes has elapsed since last call
   }else if (everOveridden && (startTimeforOveride - timeSinceLastOverride) > 120){
-      // Blinky code here
+      digitalWrite(26, HIGH);
+      letsGoCrazy(ledStrips);
+      digitalWrite(26, LOW);
       timeSinceLastOverride = seconds();
   }else{
       return;
   }
-}
-
-
-
-
-// DALED Function - Chase two dots back and forth
-
-/*********** 154 ***********/
-/*    <-- 76     77 -->    */
-/*                         */
-/*                         */
-/*                         */
-/*          EXIT           */
-/*        DOOR FRAME       */
-/*                         */
-/*                         */
-/*                         */
-/*                         */
-/* 0                   153 */
-
-
-void daledAnimation(uint32_t c, uint8_t wait) {
-  int a, b;
-
-  //1st - color chase animation
-  // Start by turning all pixels off:
-  for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
-
-  // Then display two pixels at a time:
-  for(a=77, b=78; a>0; a--, b++) {
-    strip.setPixelColor(a, c); // Set new pixel 'on'
-    strip.setPixelColor(b, c);
-     strip.show(); // Refresh LED states
-    strip.setPixelColor(a, 0); // Erase pixel, but don't refresh
-    strip.setPixelColor(b, 0);
-     delay(wait);
-  }
-
-  strip.show(); // Refresh to turn off last pixel
-  
-  // Start by turning all pixels off:
-  for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
-
-
-   // Then display two pixels at a time:
-  for(a=0, b=153; a>78; a++, b--) {
-    strip.setPixelColor(a, c); // Set new pixel 'on'
-    strip.setPixelColor(b, c);
-      strip.show(); // Refresh LED states
-    strip.setPixelColor(a, 0); // Erase pixel, but don't refresh
-    strip.setPixelColor(b, 0);
-     delay(wait);
-  }
-  strip.show(); // Refresh to turn off last pixel
-
-  //2nd - color chase animation
-  //colorWipe animation
-  for (a=77, b=78; a>0; a--, b++) {
-      strip.setPixelColor(a, c);
-      strip.setPixelColor(b, c);
-      strip.show();
-      delay(wait*2);
-  }
-
-  for(a=0, b=153; a>78; a++, b--) {
-      strip.setPixelColor(a, c);
-      strip.setPixelColor(b, c);
-      strip.show();
-      delay(wait*2);
-  }
-
-  //turn off
-  for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
-  strip.show(); // Refresh to turn off last pixel
-}
-
-void daledFade(uint32_t c, uint8_t wait) {
- /////
 }
 
 
