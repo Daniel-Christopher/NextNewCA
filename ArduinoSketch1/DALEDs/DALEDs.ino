@@ -12,7 +12,7 @@ const byte CLOCKPIN = 3;
 // DALED Initializer: first param is the number of LEDs in the strand. Next two are SPI data and clock pins:
 LPD8806 strip = LPD8806(nLEDs, DATAPIN, CLOCKPIN);
 
-int r, g, b;
+int r, g, b, rate;
 
 void setup(){
   for (int j = 7; j < 10; j++){
@@ -28,12 +28,13 @@ void setup(){
 
 
 void loop(){
-    r = random (254); g = random(254); b = random(254);
+    r = random (254); g = random(254); b = random(254); rate = random(30, 46);
+
     
     if (digitalRead(7)){
     daledAnimation(strip.Color(r, g, b), 15); // Violet, 25 milliseconds
     }else if (digitalRead(8)){
-    daledAnimation(strip.Color(r, g, b), 40); // Violet, 25 milliseconds 
+    daledAnimation(strip.Color(r, g, b), rate); // Violet, 25 milliseconds 
     }else{
     }
 }
@@ -63,7 +64,7 @@ void daledAnimation(uint32_t c, uint8_t wait) {
 
 
    // Then display two pixels at a time:
-  for(a=0, b=153; a>78; a++, b--) {
+  for(a=0, b=153; a<78; a++, b--) {
     strip.setPixelColor(a, c); // Set new pixel 'on'
     strip.setPixelColor(b, c);
       strip.show(); // Refresh LED states
@@ -82,21 +83,16 @@ void daledAnimation(uint32_t c, uint8_t wait) {
       delay(wait*2);
   }
 
-  for(a=0, b=153; a>78; a++, b--) {
+  for(a=0, b=153; a<78; a++, b--) {
       strip.setPixelColor(a, c);
       strip.setPixelColor(b, c);
       strip.show();
       delay(wait*2);
   }
 
+
   //turn off
   for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
   strip.show(); // Refresh to turn off last pixel
 }
 
-
-
-
-void daledFade(uint32_t c, uint8_t wait) {
- /////
-}
