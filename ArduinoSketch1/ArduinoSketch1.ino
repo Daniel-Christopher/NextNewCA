@@ -84,19 +84,19 @@ void setup(){
 /**********************/
 
 void loop(){
-  writeStrips(ledStrips,RED, BLUE, YELLOW, VIOLET);
+
+  //Read PIRS
+  readPIRS();
+
+  stripDance(ledStrips, PIRcount);
+  //writeStrips(ledStrips,RED, BLUE, YELLOW, VIOLET);
+
   //Reset program when uint from seconds overflows
   if (seconds() == 0){
      /* Code Snippet from "user HULK" */
     void(* resetFunc) (void) = 0; //declare reset function @ address 0
     resetFunc();
   }
-
-  //Read PIRS
-  readPIRS();
-
-  //Then Activte LEDs
-  activateLEDs();
 
   //Output activity to Pi
   writePi();
@@ -186,42 +186,87 @@ void writeStrips(stripSet strips, RGB first, RGB second, RGB third, RGB fourth){
 }
 
 
-//helper function for writeStrips
+//helper function
 void writeStrip(RGB strip, RGB color){
   analogWrite(strip.r, color.r);
   analogWrite(strip.g, color.g);
   analogWrite(strip.b, color.b);
 }
 
+void pulseStrip(RGB strip, RGB color, int rate){
+  for (int fadeValue = 0; fadeValue <= 245; fadeValue += 5){ 
+    RGB hue = {map(color.r-fadeValue, color.r-255, color.r, 0, color.r),
+    map(color.g-fadeValue, color.g-255, color.g, 0, color.g),
+    map(color.b-fadeValue, color.b-255, color.b, 0, color.b)};
+    writeStrip(strip, hue);
+    delay(rate);  
+  }
+    for (int fadeValue = 245; fadeValue >= 0 ; fadeValue -= 5){
+    RGB hue = {map(color.r-fadeValue, color.r-255, color.r, 0, color.r),
+    map(color.g-fadeValue, color.g-255, color.g, 0, color.g),
+    map(color.b-fadeValue, color.b-255, color.b, 0, color.b)};
+    writeStrip(strip, hue);
+    delay(rate);  
+  }
+}
+
 void colorCascade(stripSet strips, RGB color, int rate){
+  pulseStrip(strips.one, color, rate);
+  pulseStrip(strips.two, color, rate);
+  pulseStrip(strips.three, color, rate);
+  pulseStrip(strips.four, color, rate);
+/*
   RGB stripArray[4] = {strips.one, strips.two, strips.three, strips.four};
   for (int j; j < 4; j++){
-    delay(rate);
     writeStrip(stripArray[j], color);
+    delay(rate);
   }
-}
-/*
-void pulseFadeStrips (stripSet strips, RGB colorOne, RGB colorTwo, RGB colorThree, RGB colorFour, int rate){
-  for(int i= 245; i >= 0; i -= 5){
-    writeStrips();
-    analogWrite(stripSet.one.r, map(red-fadeValue, red-255, red, 0, red));
-    analogWrite(GREENPIN, map(green-fadeValue, green-255, green, 0, green));
-    analogWrite(BLUEPIN, map(blue-fadeValue, blue-255, blue, 0, blue)); 
-  }
-  for(int i=0; i <= 255; i += 5){
-    
-  }
-}
 */
+}
+
+void reverseCascade(stripSet strips, RGB color, int rate){
+  pulseStrip(strips.four, color, rate);
+  pulseStrip(strips.three, color, rate);
+  pulseStrip(strips.two, color, rate);
+  pulseStrip(strips.one, color, rate);
+}
+
+void stripDance(stripSet strips, int counts[4]){
+  int count = counts[0]+counts[1]+counts[2]+counts[3];
+  for (int j = 0; j<4; j++){
+    int rate = calcRate(count);
+    RGB color = calcRgb(counts);
+    colorCascade(strips, color, rate);
+  }
+}
+
+int calcRate (int count){
+  return map(count, 0, 10, 10, 0);
+}
+RGB calcRgb(int counts[4]){
+  RGB color;
+  color.r = map(counts[0], 0, 10, 0, random(255));
+  color.g = map(counts[1], 0, 10, 0, random(255));
+  color.b = map(counts[2], 0, 10, 0, random(255));
+  return color; 
+}
+
+void letsGoCrazy(stripSet strips){
+  for(int j = 0; j<10; j++){
+    RGB color = {random(255), random(255), random(255)};
+    colorCascade(strips, color, j);
+    reverseCascade(strips, color,j);
+  }
+}
 
 //NEED HELP WITH THIS FUNCTION AND ONE BELOW
 void activateLEDs(){
   switch (processPIRs()){
         case '0': return;
-
-        case '1':
             //Params: RGB color & speed in millis
             daledAnimation(strip.Color(127, 0, 127), 25); // Violet, 25 milliseconds
+        case '1':
+            
 
         case '2':
             //RGB value for arguments of color
@@ -246,6 +291,7 @@ void overideLEDs(){
   //Execute first time
   if (!everOveridden){
       // Blinky code here
+      //letsGoCrazy(ledStrips);
       everOveridden = true;
       timeSinceLastOverride = seconds();
 

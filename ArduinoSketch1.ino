@@ -20,11 +20,11 @@ HARDWARE:
 #include "SPI.h"
 
 // Number of RGB LEDs in DALED strand:
-#define nLEDs = 154;
+int nLEDs = 154;
 
 //2 pins for DALED output
-#define byte DATAPIN = 2;
-#define byte CLOCKPIN = 3;
+int DATAPIN = 22;
+int CLOCKPIN = 23;
 
 // DALED Initializer: first param is the number of LEDs in the strand. Next two are SPI data and clock pins:
 LPD8806 strip = LPD8806(nLEDs, dataPin, clockPin);
@@ -44,6 +44,13 @@ struct stripSet {
   RGB three;
   RGB four;
 };
+
+const RGB white = {255, g = 255, b = 255};
+const RGB yellow = {255, 50, 0};
+const RGB green = {0, 255, 0};
+const RGB cyan = {0, 230, 255};
+const RGB blue = {0, 0, 255};
+const RGB violet = {255, 20, 147};
 
 //LED pins for each strip
 const RGB stripOne = {2,3,4};
@@ -238,6 +245,23 @@ void overideLEDs(){
 }
 
 
+
+//Not sure where these should go but we'll need them to define colors and for pulsing effect
+//Colors...
+
+
+//pulsing loops
+  for (int fadeValue = 245; fadeValue >= 0 ; fadeValue -= 5){
+    delay(rate);
+ }
+
+for (int fadeValue = 0; fadeValue <= 245; fadeValue += 5){
+  delay(rate);
+}
+
+
+
+
 //writes all colors to their corresponding strips
 //example usage: writeStrips(stripSet, red, purple, orange, yellow);
 void writeStrips(stripSet strips, RGB first, RGB second, RGB third, RGB fourth){
@@ -254,30 +278,6 @@ void writeStrip(RGB strip, RGB color){
   analogWrite(strip.g, color.g);
   analogWrite(strip.b, color.b);
 }
-
-
-//Not sure where these should go but we'll need them to define colors and for pulsing effect
-//Colors...
- r = 255; g = 255; b = 255;//white
- r = 255; g = 0; b = 0;//red
- r = 255; g = 50; b = 0;//yellow
- r = 0; g = 255; b = 0 ;//green
- r = 0; g = 230; b = 255;//cyan
- r = 0; g = 0; b = 255; ;//blue
- r = 255; g = 20; b = 147; ;//violet
-
-//pulsing loops
-  for (int fadeValue = 245; fadeValue >= 0 ; fadeValue -= 5){
-    delay(rate);
- }
-
-for (int fadeValue = 0; fadeValue <= 245; fadeValue += 5){
-  delay(rate);
-}
-
-
-
-
 
 
 
