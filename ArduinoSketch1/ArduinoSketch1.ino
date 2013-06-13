@@ -158,16 +158,23 @@ void writeStrip(RGB strip, RGB color){
   analogWrite(strip.b, color.b);
 }
 
+void colorFade(RGB strip, RGB colorOne, RGB colorTwo, int rate){
+  
+  
+}
+
 void pulseStrip(RGB strip, RGB color, int rate){
   for (int fadeValue = 0; fadeValue <= 245; fadeValue += 5){ 
-    RGB hue = {map(color.r-fadeValue, color.r-255, color.r, 0, color.r),
+    RGB hue = {
+    map(color.r-fadeValue, color.r-255, color.r, 0, color.r),
     map(color.g-fadeValue, color.g-255, color.g, 0, color.g),
     map(color.b-fadeValue, color.b-255, color.b, 0, color.b)};
     writeStrip(strip, hue);
     delay(rate);  
   }
     for (int fadeValue = 245; fadeValue >= 0 ; fadeValue -= 5){
-    RGB hue = {map(color.r-fadeValue, color.r-255, color.r, 0, color.r),
+    RGB hue = {
+    map(color.r-fadeValue, color.r-255, color.r, 0, color.r),
     map(color.g-fadeValue, color.g-255, color.g, 0, color.g),
     map(color.b-fadeValue, color.b-255, color.b, 0, color.b)};
     writeStrip(strip, hue);
@@ -201,7 +208,7 @@ void stripDance(stripSet strips, int counts[4]){
   for (int j = 0; j<4; j++){
     int rate = calcRate(count);
     RGB color = calcRgb(counts);
-    colorCascade(strips, color, rate);
+    reverseCascade(strips, color, rate);
   }
 }
 
