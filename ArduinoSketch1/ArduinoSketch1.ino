@@ -72,15 +72,6 @@ void setup(){
 
 void loop(){
 
-readPIRS();
-
-  if (readPIRS() == 1){
-     digitalWrite(22, HIGH);
-     delay(1500);
-     digitalWrite(22, LOW);
-  }
-  
-
   readPIRS();
   
   stripDance(ledStrips, PIRcount);
@@ -124,6 +115,7 @@ int readPIRS(){
       lastSense[j] = seconds();
       coolingDown[j] = true;
 
+      // Among the things I tried to play sound
    if(PIRcount[0] == 1){
           digitalWrite(28, HIGH);
           digitalWrite(23, HIGH);
