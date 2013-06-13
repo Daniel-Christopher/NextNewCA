@@ -196,9 +196,9 @@ void colorFade(RGB strip, RGB colorOne, RGB colorTwo, int rate){
 }
 
 RGB chamillionaire(RGB oldColor, RGB newColor){
-  oldColor.r = intDec(oldColor.r, newColor.r);
-  oldColor.g = intDec(oldColor.g, newColor.g);
-  oldColor.b = intDec(oldColor.b, newColor.b);
+  oldColor.r = incDec(oldColor.r, newColor.r);
+  oldColor.g = incDec(oldColor.g, newColor.g);
+  oldColor.b = incDec(oldColor.b, newColor.b);
   return oldColor;
 }
 
