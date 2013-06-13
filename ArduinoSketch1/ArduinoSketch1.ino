@@ -76,6 +76,29 @@ void loop(){
   
   stripDance(ledStrips, PIRcount);
   //writeStrips(ledStrips,RED, BLUE, YELLOW, VIOLET);
+  // Among the things I tried to play sound
+  if(PIRcount[0] > 0){
+    digitalWrite(28, HIGH);
+    digitalWrite(23, HIGH);
+    //delay(5000);
+    digitalWrite(28, LOW);
+    digitalWrite(23, LOW);
+    }
+  if(PIRcount[1] > 0){
+    digitalWrite(29, HIGH);
+    digitalWrite(23, HIGH);
+    //delay(5000);
+    digitalWrite(29, LOW);
+    digitalWrite(23, LOW);
+  }
+        
+  if(PIRcount[3] > 0){
+    digitalWrite(30, HIGH);
+    digitalWrite(23, HIGH);
+    //delay(5000);
+    digitalWrite(30, LOW);
+    digitalWrite(23, LOW);
+  }
 
   //Reset program when uint from seconds overflows
   if (seconds() == 0){
@@ -115,30 +138,6 @@ int readPIRS(){
       lastSense[j] = seconds();
       coolingDown[j] = true;
 
-      // Among the things I tried to play sound
-   if(PIRcount[0] > 0){
-          digitalWrite(28, HIGH);
-          digitalWrite(23, HIGH);
-          //delay(5000);
-          digitalWrite(28, LOW);
-          digitalWrite(23, LOW);
-        }
-
-        if(PIRcount[1] > 0){
-            digitalWrite(29, HIGH);
-            digitalWrite(23, HIGH);
-          //delay(5000);
-          digitalWrite(29, LOW);
-          digitalWrite(23, LOW);
-        }
-        
-          if(PIRcount[3] > 0){
-            digitalWrite(30, HIGH);
-            digitalWrite(23, HIGH);
-          //delay(5000);
-          digitalWrite(30, LOW);
-          digitalWrite(23, LOW);
-        }
 
 
         //if 4th PIR is HIGH, execute overideLED function
