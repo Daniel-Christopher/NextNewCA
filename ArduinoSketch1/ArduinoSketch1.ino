@@ -261,7 +261,7 @@ void stripDance(stripSet strips, int counts[4]){
   for (int j = 0; j<4; j++){
     int rate = calcRate(count);
     RGB color = calcRgb(counts);
-    reverseCascade(strips, color, newColor, rate);
+    reverseCascade(strips, color, oldColor, rate);
     oldColor = color;
   }
 }
