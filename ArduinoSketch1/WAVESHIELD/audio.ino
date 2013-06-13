@@ -85,7 +85,7 @@ void loop() {
 
    //Welcome tone
 
-   if (pin6 == HIGH) {
+   if (pin6 > 0) {
       int hi = random(0, 3);
          switch(hi){
            case 0:
@@ -117,7 +117,7 @@ void loop() {
   
 
   //Middle Tone
-  if (pin7 == HIGH) {
+  if (pin7 > 0) {
     
    int mid = random (0, 8);
     switch(mid){
@@ -184,7 +184,7 @@ void loop() {
   
   
   //Leaving tone
-  if (pin8 == HIGH) {
+  if (pin8 > 0) {
     int left = random (0, 2);
      switch(left){
            case 0:

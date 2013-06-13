@@ -116,26 +116,26 @@ int readPIRS(){
       coolingDown[j] = true;
 
       // Among the things I tried to play sound
-   if(PIRcount[0] == 1){
+   if(PIRcount[0] > 0){
           digitalWrite(28, HIGH);
           digitalWrite(23, HIGH);
-          delay(5000);
+          //delay(5000);
           digitalWrite(28, LOW);
           digitalWrite(23, LOW);
         }
 
-        if(PIRcount[1] == 1){
+        if(PIRcount[1] > 0){
             digitalWrite(29, HIGH);
             digitalWrite(23, HIGH);
-          delay(5000);
+          //delay(5000);
           digitalWrite(29, LOW);
           digitalWrite(23, LOW);
         }
         
-          if(PIRcount[3] == 1){
+          if(PIRcount[3] > 0){
             digitalWrite(30, HIGH);
             digitalWrite(23, HIGH);
-          delay(5000);
+          //delay(5000);
           digitalWrite(30, LOW);
           digitalWrite(23, LOW);
         }
@@ -188,10 +188,39 @@ void writeStrip(RGB strip, RGB color){
 }
 
 void colorFade(RGB strip, RGB colorOne, RGB colorTwo, int rate){
-  
+ while(!rgbEquals(colorOne, colorTwo)){
+   writeStrip(strip ,chamillionaire(colorOne, colorTwo));
+   delay(rate);
+ } 
   
 }
 
+RGB chamillionaire(RGB oldColor, RGB newColor){
+  oldColor.r = intDec(oldColor.r, newColor.r);
+  oldColor.g = intDec(oldColor.g, newColor.g);
+  oldColor.b = intDec(oldColor.b, newColor.b);
+  return oldColor;
+}
+
+//helper function to increment or decrement by 5.
+int incDec(int oldVal, int newVal){
+  if (oldVal > newVal){
+    return constrain(oldVal-5, newVal, oldVal);
+  }
+  if (oldVal < newVal){
+    return constrain(oldVal+5, from, newVal);
+  }
+  return oldVal;
+}
+
+//checks if two RGB's are the same
+bool rgbEquals(RGB colorOne, RGB colorTwo){
+  if(
+  colorOne.r = colorTwo.r &&
+  colorOne.g = colorTwo.g &&
+  colorOne.b = colorTwo.b) return true;
+  return false;
+}
 void pulseStrip(RGB strip, RGB color, int rate){
   for (int fadeValue = 0; fadeValue <= 245; fadeValue += 5){ 
     RGB hue = {
@@ -211,33 +240,28 @@ void pulseStrip(RGB strip, RGB color, int rate){
   }
 }
 
-void colorCascade(stripSet strips, RGB color, int rate){
-  pulseStrip(strips.one, color, rate);
-  pulseStrip(strips.two, color, rate);
-  pulseStrip(strips.three, color, rate);
-  pulseStrip(strips.four, color, rate);
-/*
-  RGB stripArray[4] = {strips.one, strips.two, strips.three, strips.four};
-  for (int j; j < 4; j++){
-    writeStrip(stripArray[j], color);
-    delay(rate);
-  }
-*/
+void colorCascade(stripSet strips, RGB colorOne, RGB, colorTwo, int rate){
+  colorFade(strips.one, colorOne, colorTwo, rate);
+  colorFade(strips.two, colorOne, colorTwo, rate);
+  colorFade(strips.three, colorOne, colorTwo, rate);
+  colorFade(strips.four, colorOne, colorTwo, rate);
 }
 
-void reverseCascade(stripSet strips, RGB color, int rate){
-  pulseStrip(strips.four, color, rate);
-  pulseStrip(strips.three, color, rate);
-  pulseStrip(strips.two, color, rate);
-  pulseStrip(strips.one, color, rate);
+void reverseCascade(stripSet strips, RGB colorOne, RGB, colorTwo, int rate){
+  colorFade(strips.four, colorOne, colorTwo, rate);
+  colorFade(strips.three, colorOne, colorTwo, rate);
+  colorFade(strips.two, colorOne, colorTwo, rate);
+  colorFade(strips.one, colorOne, colorTwo, rate);
 }
 
 void stripDance(stripSet strips, int counts[4]){
+  RGB oldColor = calcRgb(counts);
   int count = counts[0]+counts[1]+counts[2]+counts[3];
   for (int j = 0; j<4; j++){
     int rate = calcRate(count);
     RGB color = calcRgb(counts);
-    reverseCascade(strips, color, rate);
+    reverseCascade(strips, color, newColor, rate);
+    oldColor = color;
   }
 }
 
