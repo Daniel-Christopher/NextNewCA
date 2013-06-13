@@ -208,7 +208,7 @@ int incDec(int oldVal, int newVal){
     return constrain(oldVal-5, newVal, oldVal);
   }
   if (oldVal < newVal){
-    return constrain(oldVal+5, from, newVal);
+    return constrain(oldVal+5, oldVal, newVal);
   }
   return oldVal;
 }
@@ -216,9 +216,9 @@ int incDec(int oldVal, int newVal){
 //checks if two RGB's are the same
 bool rgbEquals(RGB colorOne, RGB colorTwo){
   if(
-  colorOne.r = colorTwo.r &&
-  colorOne.g = colorTwo.g &&
-  colorOne.b = colorTwo.b) return true;
+  colorOne.r == colorTwo.r &&
+  colorOne.g == colorTwo.g &&
+  colorOne.b == colorTwo.b) return true;
   return false;
 }
 void pulseStrip(RGB strip, RGB color, int rate){
@@ -240,14 +240,14 @@ void pulseStrip(RGB strip, RGB color, int rate){
   }
 }
 
-void colorCascade(stripSet strips, RGB colorOne, RGB, colorTwo, int rate){
+void colorCascade(stripSet strips, RGB colorOne, RGB colorTwo, int rate){
   colorFade(strips.one, colorOne, colorTwo, rate);
   colorFade(strips.two, colorOne, colorTwo, rate);
   colorFade(strips.three, colorOne, colorTwo, rate);
   colorFade(strips.four, colorOne, colorTwo, rate);
 }
 
-void reverseCascade(stripSet strips, RGB colorOne, RGB, colorTwo, int rate){
+void reverseCascade(stripSet strips, RGB colorOne, RGB colorTwo, int rate){
   colorFade(strips.four, colorOne, colorTwo, rate);
   colorFade(strips.three, colorOne, colorTwo, rate);
   colorFade(strips.two, colorOne, colorTwo, rate);
@@ -278,9 +278,10 @@ RGB calcRgb(int counts[4]){
 
 void letsGoCrazy(stripSet strips){
   for(int j = 0; j<10; j++){
-    RGB color = {random(255), random(255), random(255)};
-    colorCascade(strips, color, j);
-    reverseCascade(strips, color,j);
+    RGB colorOne = {random(255), random(255), random(255)};
+    RGB colorTwo = {random(255), random(255), random(255)};
+    colorCascade(strips, colorOne, colorTwo, j);
+    reverseCascade(strips, colorOne, colorTwo, j);
   }
 }
 
