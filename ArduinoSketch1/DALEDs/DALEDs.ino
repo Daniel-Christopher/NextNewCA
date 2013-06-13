@@ -1,98 +1,120 @@
-/* Libraries for DALEDs */
-#include "LPD8806.h"
-#include "SPI.h"
+/*
 
-// Number of RGB LEDs in DALED strand:
-const int nLEDs = 154;
+Outputs on Mega to WaveShield: 22, 23, 24
+Inputs on Mini with WaveShield: 6, 7, 8
 
-//2 pins for DALED output
-const byte DATAPIN = 2;
-const byte CLOCKPIN = 3;
+*/
 
-// DALED Initializer: first param is the number of LEDs in the strand. Next two are SPI data and clock pins:
-LPD8806 strip = LPD8806(nLEDs, DATAPIN, CLOCKPIN);
+#include <Adafruit_NeoPixel.h>
 
-int r, g, b, rate;
+// Parameter 1 = number of pixels in strip
+// Parameter 2 = pin number 
 
-void setup(){
-  for (int j = 7; j < 10; j++){
-    pinMode(j, OUTPUT);
-  }
- 
-   // Start up the DALED strip
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(150, 3, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+  pinMode(6, INPUT);
+  pinMode(7, INPUT);
+  pinMode(8, INPUT);
   strip.begin();
-  // Update the DALED strip, to start they are all 'off'
-  strip.show();
-  
+  strip.show(); // Initialize all pixels to 'off'
 }
 
-
-void loop(){
-    r = random (254); g = random(254); b = random(254); rate = random(30, 46);
-
+void loop() {
+  int pin6 = digitalRead(6);
+  int pin7 = digitalRead(7);
+  int pin8 = digitalRead(8);
+  
+  if (pin6 ==HIGH && pin7 == LOW && pin8==LOW){
+        colorWipe(strip.Color(random(200, 255), random(0,26), random(0,100)), 100);
+  }else if (pin7 ==HIGH && pin6 == LOW && pin8==LOW){
     
-    if (digitalRead(7)){
-    daledAnimation(strip.Color(r, g, b), 15); // Violet, 25 milliseconds
-    }else if (digitalRead(8)){
-    daledAnimation(strip.Color(r, g, b), rate); // Violet, 25 milliseconds 
-    }else{
-    }
-}
-
-
-void daledAnimation(uint32_t c, uint8_t wait) {
-  int a, b;
-
-  //1st - color chase animation
-  // Start by turning all pixels off:
-  for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
-
-  // Then display two pixels at a time:
-  for(a=77, b=78; a>0; a--, b++) {
-    strip.setPixelColor(a, c); // Set new pixel 'on'
-    strip.setPixelColor(b, c);
-     strip.show(); // Refresh LED states
-    strip.setPixelColor(a, 0); // Erase pixel, but don't refresh
-    strip.setPixelColor(b, 0);
-     delay(wait);
-  }
-
-  strip.show(); // Refresh to turn off last pixel
+         colorWipe(strip.Color(random(40,255), random(0,255), random(0,255)), random(15, 60));
+ 
+  }else if (pin8 ==HIGH && pin7 == LOW && pin6==LOW){
+        
+     colorWipe(strip.Color(random(40,255), random(0,255), random(0,255)), 75);
   
-  // Start by turning all pixels off:
-  for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
-
-
-   // Then display two pixels at a time:
-  for(a=0, b=153; a<78; a++, b--) {
-    strip.setPixelColor(a, c); // Set new pixel 'on'
-    strip.setPixelColor(b, c);
-      strip.show(); // Refresh LED states
-    strip.setPixelColor(a, 0); // Erase pixel, but don't refresh
-    strip.setPixelColor(b, 0);
-     delay(wait);
+  }else {
+      for(int a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
   }
-  strip.show(); // Refresh to turn off last pixel
-
-  //2nd - color chase animation
-  //colorWipe animation
-  for (a=77, b=78; a>0; a--, b++) {
-      strip.setPixelColor(a, c);
-      strip.setPixelColor(b, c);
-      strip.show();
-      delay(wait*2);
-  }
-
-  for(a=0, b=153; a<78; a++, b--) {
-      strip.setPixelColor(a, c);
-      strip.setPixelColor(b, c);
-      strip.show();
-      delay(wait*2);
-  }
-
-
-  //turn off
-  for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
-  strip.show(); // Refresh to turn off last pixel
 }
 
+
+// Fill the dots one after the other with a color
+void colorWipe(uint32_t c, uint8_t wait) {
+   int a, b, d;
+
+  for(a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
+
+  for(a=76, b=77; a>0; a--, b++) {
+      strip.setPixelColor(a, c); // Set new pixel 'on'
+      strip.setPixelColor(b, c);
+        if (b == 149){
+            strip.setPixelColor(150, c);
+        }    
+      strip.show();
+      delay(wait);
+  }
+
+  delay(3000);
+
+  c = (random(180,255), random(100,200), random(120,255));
+
+  for(a=0, b=150; a<77; a++, b--) {
+      strip.setPixelColor(a, c); // Set new pixel 'on'
+      strip.setPixelColor(b, c);
+      strip.show();
+      delay(wait);
+  }
+
+  delay(3000);
+
+  for(a=76, b=77; a>0; a--, b++) {
+    strip.setPixelColor(76, 0); 
+      strip.setPixelColor(a, 0);
+      strip.setPixelColor(b, 0);
+      strip.show();
+      delay(wait);
+  }
+
+}
+
+void rainbow(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256; j++) {
+    for(i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel((i+j) & 255));
+    }
+    strip.show();
+    delay(wait);
+  }
+}
+
+// Slightly different, this makes the rainbow equally distributed throughout
+void rainbowCycle(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
+    for(i=0; i< strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+    }
+    strip.show();
+    delay(wait * 2);
+  }
+}
+
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos) {
+  if(WheelPos < 85) {
+   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+  } else if(WheelPos < 170) {
+   WheelPos -= 85;
+   return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  } else {
+   WheelPos -= 170;
+   return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+}
