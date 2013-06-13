@@ -72,9 +72,8 @@ void setup(){
 
 void loop(){
 
-  //Read PIRS
   readPIRS();
-
+  
   stripDance(ledStrips, PIRcount);
   //writeStrips(ledStrips,RED, BLUE, YELLOW, VIOLET);
 
@@ -84,9 +83,6 @@ void loop(){
     void(* resetFunc) (void) = 0; //declare reset function @ address 0
     resetFunc();
   }
-
-  //Output activity to Pi
-  writePi();
 }
 
 
@@ -100,7 +96,7 @@ uint16_t seconds(){
 
 //Read PIRS and keep track of which PIRs are active & generally how long they have been active
 //ex. a PIRcount == 1 is appox 30 seconds
-void readPIRS(){
+int readPIRS(){
   int j;
   PIR[0] = digitalRead(50);
   PIR[1] = digitalRead(51);
@@ -109,17 +105,49 @@ void readPIRS(){
   
   startTime = seconds();
 
+  if (PIR[0] == LOW && PIR[1] == LOW && PIR[2] == LOW && PIR[3] == LOW){
+    return 1;
+  }
+
   for (j=0; j<4; j++){
     if (PIR[j] == HIGH && !(coolingDown[j])){
       PIRcount[j]++;
       lastSense[j] = seconds();
       coolingDown[j] = true;
 
-        //if 4th PIR is HIGH, execute overideLED function
-        if(PIR[j] == 3){
-            i++; //different than PIRcount[3], as i never gets decremented, this is roughly how many people exited per day
-            overideLEDs();
+      // Among the things I tried to play sound
+   if(PIRcount[0] == 1){
+          digitalWrite(28, HIGH);
+          digitalWrite(23, HIGH);
+          delay(5000);
+          digitalWrite(28, LOW);
+          digitalWrite(23, LOW);
         }
+
+        if(PIRcount[1] == 1){
+            digitalWrite(29, HIGH);
+            digitalWrite(23, HIGH);
+          delay(5000);
+          digitalWrite(29, LOW);
+          digitalWrite(23, LOW);
+        }
+        
+          if(PIRcount[3] == 1){
+            digitalWrite(30, HIGH);
+            digitalWrite(23, HIGH);
+          delay(5000);
+          digitalWrite(30, LOW);
+          digitalWrite(23, LOW);
+        }
+
+
+        //if 4th PIR is HIGH, execute overideLED function
+        if(PIR[3] == HIGH){
+            i++; //different than PIRcount[3], as i never gets decremented, this is roughly how many people exited per day
+           
+        }
+
+       
     }else if (PIR[j] == HIGH && coolingDown[j]){
       //if PIR is HIGH and has been at least 30 seconds since last trigger, then increment counter
       if (startTime - lastSense[i] > 30){
@@ -129,7 +157,7 @@ void readPIRS(){
       }else{
         //Not Enough time has Elapsed
       }
-
+      
     }else if (PIR[j] == LOW){
        //if PIR is HIGH and has been at least 60 seconds since last trigger, then decrement counter
       if (startTime - lastSense[j] > 60){
@@ -138,6 +166,7 @@ void readPIRS(){
           lastSense[j] = seconds();
         }
       }
+      
     }
   }
 }
@@ -242,35 +271,26 @@ void overideLEDs(){
   //Execute first time
   if (!everOveridden){
 
-      digitalWrite(25, HIGH);
       letsGoCrazy(ledStrips);
       everOveridden = true;
       timeSinceLastOverride = seconds();
-      digitalWrite(25, LOW);
+       digitalWrite(30, HIGH);
+        digitalWrite(24, HIGH);
+       delay(5000);
+       digitalWrite(30, LOW);
+         digitalWrite(24, LOW);
 
   //Executes only if more than two minutes has elapsed since last call
   }else if (everOveridden && (startTimeforOveride - timeSinceLastOverride) > 120){
-      digitalWrite(26, HIGH);
       letsGoCrazy(ledStrips);
-      digitalWrite(26, LOW);
+      digitalWrite(30, HIGH);
+       digitalWrite(24, HIGH);
+      delay(5000);
+      digitalWrite(30, LOW);
+       digitalWrite(24, LOW);
       timeSinceLastOverride = seconds();
   }else{
       return;
   }
 }
-
-
-//Still unclear what to send PI
-void writePi(){
-  Serial.println("PIR Activity: ");
-
-  //Ideally we'll tell the Pi when to take a photo here
-  Serial.print("EXIT DOOR: ");
-    if (PIRcount[3] > 0){
-      Serial.println("ACTIVE");
-    }else{
-      Serial.println("INACTIVE");
-    }
-}
-
 
