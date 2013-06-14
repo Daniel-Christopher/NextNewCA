@@ -48,7 +48,7 @@ bool coolingDown[4] = {false, false, false, false};
 //keeps track of whether value of PIRcount is rising (true) or falling (false)
 bool rising[4] = {false, false, false, false};
 bool everOveridden;
-
+RGB prevColor = {0,0,0};
 
 /**********************/
 
@@ -75,7 +75,8 @@ void loop(){
 
   readPIRS();
   
-  stripDance(ledStrips, PIRcount);
+  prevColor = stripDance(ledStrips, PIRcount, prevColor);
+  //reverseCascade(ledStrips, RED, BLUE, 10);
   //writeStrips(ledStrips,RED, BLUE, YELLOW, VIOLET);
   // Among the things I tried to play sound
   if(PIRcount[0] > 0){
@@ -188,10 +189,14 @@ void writeStrip(RGB strip, RGB color){
 }
 
 void colorFade(RGB strip, RGB colorOne, RGB colorTwo, int rate){
- while(!rgbEquals(colorOne, colorTwo)){
-   writeStrip(strip ,chamillionaire(colorOne, colorTwo));
+ RGB color = colorOne;
+ while(!rgbEquals(color, colorTwo)){
+   Serial.println("struck in this loop");
+   writeStrip(strip , color);
    delay(rate);
+   color = chamillionaire(color, colorTwo);
  } 
+ Serial.println("broke out of loop");
   
 }
 
@@ -202,13 +207,15 @@ RGB chamillionaire(RGB oldColor, RGB newColor){
   return oldColor;
 }
 
-//helper function to increment or decrement by 5.
+//helper function to increment or decrement by 1.
 int incDec(int oldVal, int newVal){
   if (oldVal > newVal){
-    return constrain(oldVal-5, newVal, oldVal);
+    return constrain(oldVal-3, newVal, oldVal);
+    //return oldVal-1;
   }
   if (oldVal < newVal){
-    return constrain(oldVal+5, oldVal, newVal);
+    return constrain(oldVal+3, oldVal, newVal);
+    //return oldVal+1;
   }
   return oldVal;
 }
@@ -254,15 +261,15 @@ void reverseCascade(stripSet strips, RGB colorOne, RGB colorTwo, int rate){
   colorFade(strips.one, colorOne, colorTwo, rate);
 }
 
-void stripDance(stripSet strips, int counts[4]){
-  RGB oldColor = calcRgb(counts);
+RGB stripDance(stripSet strips, int counts[4], RGB oldColor){
   int count = counts[0]+counts[1]+counts[2]+counts[3];
   for (int j = 0; j<4; j++){
     int rate = calcRate(count);
     RGB color = calcRgb(counts);
-    reverseCascade(strips, color, oldColor, rate);
+    reverseCascade(strips, oldColor, color, rate);
     oldColor = color;
   }
+  return oldColor;
 }
 
 int calcRate (int count){
@@ -270,9 +277,9 @@ int calcRate (int count){
 }
 RGB calcRgb(int counts[4]){
   RGB color;
-  color.r = map(counts[0], 0, 10, 0, random(255));
-  color.g = map(counts[1], 0, 10, 0, random(255));
-  color.b = map(counts[2], 0, 10, 0, random(255));
+  color.r = map(counts[0], 0, random(1, 10), 0, 255);
+  color.g = map(counts[1], 0, random(1, 10), 0, 255);
+  color.b = map(counts[2], 0, random(1, 10), 0, 255);
   return color; 
 }
 

@@ -26,14 +26,14 @@ void loop() {
   int pin8 = digitalRead(8);
   
   if (pin6 ==HIGH && pin7 == LOW && pin8==LOW){
-        colorWipe(strip.Color(random(200, 255), random(0,26), random(0,100)), 100);
+        colorWipe(strip.Color(random(100, 155), random(0,26), random(0,100)), 100);
   }else if (pin7 ==HIGH && pin6 == LOW && pin8==LOW){
     
-         colorWipe(strip.Color(random(40,255), random(0,255), random(0,255)), random(15, 60));
+         colorWipe(strip.Color(random(40,155), random(0,155), random(0,155)), random(15, 60));
  
   }else if (pin8 ==HIGH && pin7 == LOW && pin6==LOW){
         
-     colorWipe(strip.Color(random(40,255), random(0,255), random(0,255)), 75);
+     colorWipe(strip.Color(random(40,155), random(0,155), random(0,155)), 75);
   
   }else {
       for(int a=0 ; a<strip.numPixels(); a++) strip.setPixelColor(a, 0);
@@ -59,7 +59,7 @@ void colorWipe(uint32_t c, uint8_t wait) {
 
   delay(3000);
 
-  c = (random(180,255), random(100,200), random(120,255));
+  c = (random(80,155), random(50,100), random(20,155));
 
   for(a=0, b=150; a<77; a++, b--) {
       strip.setPixelColor(a, c); // Set new pixel 'on'
@@ -109,12 +109,12 @@ void rainbowCycle(uint8_t wait) {
 // The colours are a transition r - g - b - back to r.
 uint32_t Wheel(byte WheelPos) {
   if(WheelPos < 85) {
-   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+   return strip.Color(WheelPos * 3, 155 - WheelPos * 3, 0);
   } else if(WheelPos < 170) {
    WheelPos -= 85;
    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
   } else {
    WheelPos -= 170;
-   return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+   return strip.Color(0, WheelPos * 3, 155 - WheelPos * 3);
   }
 }
